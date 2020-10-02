@@ -32,104 +32,101 @@ class _UsersListState extends State<UsersList> {
   Widget build(BuildContext context) {
     _pageController = PageController(initialPage: _pageViewIndex, keepPage: false);
     _pageController.addListener(_onPageViewScroll);
-    return BlocBuilder(
-      bloc: _userBloc,
-      builder: (BuildContext context, UserState state) {
-        switch (state.status) {
-          case UserStatus.failure:
-            return Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text("Произошла ошибка"),
-                    FlatButton(
-                      onPressed: () {
-                        _userBloc.add(UserFetched());
-                        },
-                      child: Text("Повторить",
-                      style: TextStyle(
-                        color: Colors.blue
-                      ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            );
-          case UserStatus.success:
-            return Stack(
-              children: [
-                Scaffold(
-                  appBar: AppBar(title: Text('Random Users')),
-                  body: ListView.builder(
-                    itemBuilder: (BuildContext context, int index) {
-                      return index >= state.users.length
-                          ? BottomLoader()
-                          : Container(
-                             color: _isTapped ? Colors.black.withOpacity(0.9):Colors.white,
-                            child: ListTile(
-                              leading: CircleAvatar(
-                              backgroundImage:
-                               NetworkImage(state.users[index].pictureSmall),
-                              ),
-                             title: Text(
-                               state.users[index].fullName(),
-                                style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                                 ),
-                              ),
-                               subtitle: Text(state.users[index].address()),
-                               onTap: () {
-                            _pageViewIndex = index;
-                            _isTapped = true;
-                            setState(() {});
-                        },
-                      ),
-                          );
-                    },
-                    itemCount: state.users.length + 1,
-                    controller: _scrollController,
+    return Scaffold(
+      backgroundColor: _isTapped ? Colors.transparent: Colors.white,
+      appBar:  _isTapped ? AppBar(
+          title: Text((_pageViewIndex + 1).toString()+" из "+ _userBloc.state.users.length.toString()),
+          centerTitle: true,
+          actions: <Widget>[
+            IconButton(
+                icon: Icon(Icons.clear),
+                onPressed: (){
+                  _isTapped = false;
+                  setState(() {});
+                }
+            ),
+          ]
+      ): AppBar(title: Text('Random Users')),
+      body: BlocBuilder(
+        bloc: _userBloc,
+        builder: (BuildContext context, UserState state) {
+          switch (state.status) {
+            case UserStatus.failure:
+              return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text("Произошла ошибка"),
+                      FlatButton(
+                        onPressed: () {
+                          _userBloc.add(UserFetched());
+                          },
+                        child: Text("Повторить",
+                        style: TextStyle(
+                          color: Colors.blue
+                        ),
+                        ),
+                      )
+                    ],
                   ),
-                  ),
-                  Visibility(
-                   visible: _isTapped,
-                    child: PageView.builder(
+              );
+            case UserStatus.success:
+              return Stack(
+                children: [
+                   ListView.builder(
                       itemBuilder: (BuildContext context, int index) {
-                        return Scaffold(
-                            backgroundColor: Colors.transparent,
-                            appBar: AppBar(
-                              title: Text((index + 1).toString()+" из "+ state.users.length.toString()),
-                                centerTitle: true,
-                                actions: <Widget>[
-                                    IconButton(
-                                       icon: Icon(Icons.clear),
-                                      onPressed: (){
-                                        _isTapped = false;
-                                           setState(() {});
-                                      }
-                                    ),
-                                 ]
-                            ),
-                            body: index >= state.users.length? Center(child: CircularProgressIndicator())
-                                :UserPageItem(users: state.users,index: index)
+                        return index >= state.users.length
+                            ? BottomLoader()
+                            : Container(
+                               color: _isTapped ? Colors.black.withOpacity(0.9):Colors.white,
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                backgroundImage:
+                                 NetworkImage(state.users[index].pictureSmall),
+                                ),
+                               title: Text(
+                                 state.users[index].fullName(),
+                                  style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                   ),
+                                ),
+                                 subtitle: Text(state.users[index].address()),
+                                 onTap: () {
+                              _pageViewIndex = index;
+                              _isTapped = true;
+                              setState(() {});
+                          },
+                        ),
                         );
                       },
                       itemCount: state.users.length + 1,
-                      controller: _pageController,
-                      onPageChanged: (int index) {
-                        setState(() {
-                          _pageViewIndex = index;
-                        });
-                      }
+                      controller: _scrollController,
+                    ),
+                    Visibility(
+                     visible: _isTapped,
+                      child: PageView.builder(
+                        itemBuilder: (BuildContext context, int index) {
+                          return index >= state.users.length? Center(child: CircularProgressIndicator())
+                                  :UserPageItem(users: state.users,index: index);
+                        },
+                        itemCount: state.users.length + 1,
+                        controller: _pageController,
+                        onPageChanged: (int index) {
+                          setState(() {
+                            _pageViewIndex = index;
+                          });
+                        }
+                      )
                     )
-                  )
-              ],
-            );
-          default:
-            return Scaffold(body: Center(child: CircularProgressIndicator()));
-        }
-      },
+                ],
+              );
+            default:
+              return  Center(
+                      child: CircularProgressIndicator()
+              );
+          }
+        },
+      ),
     );
   }
 
